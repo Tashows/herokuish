@@ -73,9 +73,25 @@ _select-buildpack() {
     fi
   fi
   if [[ "$selected_path" ]] && [[ "$selected_name" ]]; then
-    title "$selected_name app detected"
+    if [[ "${BUILDPACK_DETECT_OUTPUT}" == "json" ]]; then
+      # Strip leading number and "buildpack-" prefix
+      buildpack_id=$(basename "$selected_path")
+      buildpack_id="${buildpack_id#*_buildpack-}"
+
+      # Output proper JSON
+			jq -n \
+				--arg name "$selected_name" \
+				--arg id "$buildpack_id" \
+				'{name: $name, id: $id}'
+    else
+      title "$selected_name app detected"
+    fi
   else
-    title "Unable to select a buildpack"
+    if [[ "${BUILDPACK_DETECT_OUTPUT}" == "json" ]]; then
+      jq -n '{error: "Unable to select a buildpack"}'
+    else
+      title "Unable to select a buildpack"
+    fi
     exit 1
   fi
 }
