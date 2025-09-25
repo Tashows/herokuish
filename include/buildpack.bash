@@ -32,6 +32,14 @@ _move-build-to-app() {
 }
 
 _select-buildpack() {
+	local checked_out_path="$build_path"
+	# checkout app code if build_path is a bare git repo
+	if [ -f "$checked_out_path/HEAD" ] && [ -d "$checked_out_path/objects" ]; then
+		echo "Detected bare repo at $checked_out_path, checking out worktree..."
+		tmpdir=$(mktemp -d)
+		git --git-dir="$checked_out_path" --work-tree="$tmpdir" checkout -f &>/dev/null
+		checked_out_path="$tmpdir"
+	fi
   if [[ -n "$BUILDPACK_URL" ]]; then
     title "Fetching custom buildpack"
     # buildpack_path defined in outer scope
@@ -44,13 +52,14 @@ _select-buildpack() {
     # unprivileged_user & unprivileged_group defined in outer scope
     # shellcheck disable=SC2154
     chown -R "$unprivileged_user:$unprivileged_group" "$buildpack_path/custom"
-    selected_name="$(unprivileged "$selected_path/bin/detect" "$build_path" || true)"
+    selected_name="$(unprivileged "$selected_path/bin/detect" "$checked_out_path" || true)"
   else
     # shellcheck disable=SC2206
     local buildpacks=($buildpack_path/*)
     local valid_buildpacks=()
+
     for buildpack in "${buildpacks[@]}"; do
-      unprivileged "$buildpack/bin/detect" "$build_path" &>/dev/null && valid_buildpacks+=("$buildpack")
+      unprivileged "$buildpack/bin/detect" "$checked_out_path" &>/dev/null && valid_buildpacks+=("$buildpack")
     done
     if [[ ${#valid_buildpacks[@]} -gt 1 ]]; then
       title "Warning: Multiple default buildpacks reported the ability to handle this app. The first buildpack in the list below will be used."
