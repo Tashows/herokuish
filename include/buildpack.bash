@@ -34,10 +34,10 @@ _move-build-to-app() {
 _select-buildpack() {
 	local checked_out_path="$build_path"
 	# checkout app code if build_path is a bare git repo
-	if [ -f "$checked_out_path/HEAD" ] && [ -d "$checked_out_path/objects" ]; then
-		echo "Detected bare repo at $checked_out_path, checking out worktree..."
+	if [ -f "$build_path/HEAD" ] && [ -d "$build_path/objects" ]; then
+		#	If bare repo is detected, check out worktree, as expected by buildpacks
 		tmpdir=$(mktemp -d)
-		git --git-dir="$checked_out_path" --work-tree="$tmpdir" checkout -f &>/dev/null
+		git --git-dir="$build_path" --work-tree="$tmpdir" checkout -f &>/dev/null
 		chown -R "$unprivileged_user:$unprivileged_group" "$tmpdir"
 		checked_out_path="$tmpdir"
 	fi
