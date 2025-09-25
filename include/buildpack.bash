@@ -69,7 +69,7 @@ _select-buildpack() {
     fi
     if [[ ${#valid_buildpacks[@]} -gt 0 ]]; then
       selected_path="${valid_buildpacks[0]}"
-      selected_name=$(unprivileged "$selected_path/bin/detect" "$build_path")
+      selected_name=$(unprivileged "$selected_path/bin/detect" "$checked_out_path")
     fi
   fi
   if [[ "$selected_path" ]] && [[ "$selected_name" ]]; then
