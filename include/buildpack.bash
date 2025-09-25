@@ -38,6 +38,7 @@ _select-buildpack() {
 		echo "Detected bare repo at $checked_out_path, checking out worktree..."
 		tmpdir=$(mktemp -d)
 		git --git-dir="$checked_out_path" --work-tree="$tmpdir" checkout -f &>/dev/null
+		chown -R "$unprivileged_user:$unprivileged_group" "$tmpdir"
 		checked_out_path="$tmpdir"
 	fi
   if [[ -n "$BUILDPACK_URL" ]]; then
