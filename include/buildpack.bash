@@ -69,10 +69,10 @@ _select-buildpack() {
       buildpack_id="${buildpack_id#*_buildpack-}"
 
       # Output proper JSON
-			jq -n \
-				--arg name "$selected_name" \
-				--arg id "$buildpack_id" \
-				'{name: $name, id: $id}'
+      jq -n \
+        --arg name "$selected_name" \
+        --arg id "$buildpack_id" \
+        '{name: $name, id: $id}'
     else
       title "$selected_name app detected"
     fi
@@ -87,11 +87,11 @@ _select-buildpack() {
 }
 
 buildpack-detect() {
-	declare desc="Detect suitable buildpack for an application"
-	ensure-paths
-	[[ "$USER" ]] || randomize-unprivileged
-	buildpack-setup >/dev/null
-	_select-buildpack
+  declare desc="Detect suitable buildpack for an application"
+  ensure-paths
+  [[ "$USER" ]] || randomize-unprivileged
+  buildpack-setup >/dev/null
+  _select-buildpack
 }
 
 buildpack-build() {
