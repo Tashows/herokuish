@@ -32,15 +32,17 @@ _move-build-to-app() {
 }
 
 _select-buildpack() {
-	local checked_out_path="$build_path"
-	# checkout app code if build_path is a bare git repo
-	if [ -f "$build_path/HEAD" ] && [ -d "$build_path/objects" ]; then
-		#	If bare repo is detected, check out worktree, as expected by buildpacks
-		tmpdir=$(mktemp -d)
-		git --git-dir="$build_path" --work-tree="$tmpdir" checkout -f &>/dev/null
-		chown -R "$unprivileged_user:$unprivileged_group" "$tmpdir"
-		checked_out_path="$tmpdir"
-	fi
+  local checked_out_path="$build_path"
+  # checkout app code if build_path is a bare git repo
+  if [ -f "$build_path/HEAD" ] && [ -d "$build_path/objects" ]; then
+    # If bare repo is detected, check out worktree, as expected by buildpacks
+    tmpdir=$(mktemp -d)
+    git --git-dir="$build_path" --work-tree="$tmpdir" checkout -f &>/dev/null
+    # unprivileged_user & unprivileged_group defined in outer scope
+    # shellcheck disable=SC2154
+    chown -R "$unprivileged_user:$unprivileged_group" "$tmpdir"
+    checked_out_path="$tmpdir"
+  fi
   if [[ -n "$BUILDPACK_URL" ]]; then
     title "Fetching custom buildpack"
     # buildpack_path defined in outer scope
@@ -79,10 +81,10 @@ _select-buildpack() {
       buildpack_id="${buildpack_id#*_buildpack-}"
 
       # Output proper JSON
-			jq -n \
-				--arg name "$selected_name" \
-				--arg id "$buildpack_id" \
-				'{name: $name, id: $id}'
+      jq -n \
+        --arg name "$selected_name" \
+        --arg id "$buildpack_id" \
+        '{name: $name, id: $id}'
     else
       title "$selected_name app detected"
     fi
@@ -97,11 +99,11 @@ _select-buildpack() {
 }
 
 buildpack-detect() {
-	declare desc="Detect suitable buildpack for an application"
-	ensure-paths
-	[[ "$USER" ]] || randomize-unprivileged
-	buildpack-setup >/dev/null
-	_select-buildpack
+  declare desc="Detect suitable buildpack for an application"
+  ensure-paths
+  [[ "$USER" ]] || randomize-unprivileged
+  buildpack-setup >/dev/null
+  _select-buildpack
 }
 
 buildpack-build() {
