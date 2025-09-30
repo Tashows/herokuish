@@ -53,9 +53,27 @@ _select-buildpack() {
       unprivileged "$buildpack/bin/detect" "$build_path" &>/dev/null && valid_buildpacks+=("$buildpack")
     done
     if [[ ${#valid_buildpacks[@]} -gt 1 ]]; then
-      title "Warning: Multiple default buildpacks reported the ability to handle this app. The first buildpack in the list below will be used."
-      # shellcheck disable=SC2001
-      echo "Detected buildpacks: $(sed -e "s:/tmp/buildpacks/[0-9][0-9]_buildpack-::g" <<<"${valid_buildpacks[@]}")" | indent
+      if [[ "${BUILDPACK_DETECT_OUTPUT}" == "json" ]]; then
+        buildpack_list="["
+        for bp in "${valid_buildpacks[@]}"; do
+          # Strip leading number and "buildpack-" prefix
+          buildpack_id=$(basename "$bp")
+          buildpack_id="${buildpack_id#*_buildpack-}"
+          buildpack_name=$(unprivileged "$bp/bin/detect" "$build_path")
+          buildpack_list+="{\"name\": \"$buildpack_name\", \"id\": \"$buildpack_id\"},"
+        done
+        buildpack_list="${buildpack_list%,}]"
+
+        jq -n \
+          --arg message "Warning: Multiple default buildpacks reported the ability to handle this app. The first buildpack in the list below will be used." \
+          --argjson buildpacks "$buildpack_list" \
+          '{message: $message, buildpacks: $buildpacks}'
+        exit 0
+      else
+        title "Warning: Multiple default buildpacks reported the ability to handle this app. The first buildpack in the list below will be used."
+        # shellcheck disable=SC2001
+        echo "Detected buildpacks: $(sed -e "s:/tmp/buildpacks/[0-9][0-9]_buildpack-::g" <<<"${valid_buildpacks[@]}")" | indent
+      fi
     fi
     if [[ ${#valid_buildpacks[@]} -gt 0 ]]; then
       selected_path="${valid_buildpacks[0]}"
